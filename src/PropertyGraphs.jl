@@ -1,14 +1,12 @@
 
 module PropertyGraphs
 
-import Base: getindex, setindex!
+import Base: getindex, getproperty, setproperty!
 using LightGraphs
 import LightGraphs: add_vertex!, add_edge!, edges, vertices, nv, ne, inneighbors, outneighbors
 
 export AbstractPropertyGraph,
-       PropertyGraph,
-       VertexPropertyGraph,
-       EdgePropertyGraph,
+       LabeledVertexPropertyGraph,
        pindex,
        add_vindex!
 
@@ -22,6 +20,6 @@ export add_vertex!,
        inneighbors,
        outneighbors
 
-include("immutable_property_graph.jl")
+include("property_graph.jl")
 
 end
