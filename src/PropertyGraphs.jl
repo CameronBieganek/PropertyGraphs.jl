@@ -22,6 +22,6 @@ export add_vertex!,
        inneighbors,
        outneighbors
 
-include("property_graph.jl")
+include("immutable_property_graph.jl")
 
 end
