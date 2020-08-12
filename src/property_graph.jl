@@ -5,7 +5,8 @@ abstract type AbstractPropertyGraph{T} <: AbstractGraph{T} end
 
 struct LabeledVertexPropertyGraph{L, P <: NamedTuple, T, G <: AbstractGraph{T}} <: AbstractPropertyGraph{T}
     g       ::  G
-    vindex  ::  Dict{L, T}   # map from custom index to primitive index
+    pindex  ::  Dict{L, T}   # map from vertex label to primitive index
+    vlabel  ::  Dict{T, L}   # map from primitive index to vertex label
     vprops  ::  P            # vertex property data
 end
 
@@ -16,7 +17,8 @@ function LabeledVertexPropertyGraph(
         vertex_properties_type::NamedTuple
     ) where T
 
-    vindex = Dict{vertex_label_type, T}()
+    pindex = Dict{vertex_label_type, T}()
+    vlabel = Dict{T, vertex_label_type}()
 
     props = keys(vertex_properties_type)
     prop_types = values(vertex_properties_type)
@@ -27,7 +29,7 @@ function LabeledVertexPropertyGraph(
 
     vprops = (; ps...)
 
-    LabeledVertexPropertyGraph(g, vindex, vprops)
+    LabeledVertexPropertyGraph(g, pindex, vlabel, vprops)
 end
 
 
@@ -39,13 +41,16 @@ inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(pg.g, pindex(pg, v))
 outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(pg.g, pindex(pg, v))
 
 
-
 # Get the primitive index.
 pindex(pg::AbstractPropertyGraph, i::Integer) = i
-pindex(pg::AbstractPropertyGraph, vlabel) = pg.vindex[vlabel]
+pindex(pg::AbstractPropertyGraph, vlabel) = pg.pindex[vlabel]
 
 pindex(pg::AbstractPropertyGraph, e::Edge) = e
 pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
+
+
+# Get the vertex label.
+vlabel(pg::AbstractPropertyGraph, pindex::Integer) = pg.vlabel[pindex]
 
 
 struct VertexProperties{G <: AbstractPropertyGraph, L}
@@ -87,13 +92,12 @@ function setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
 end
 
 
-add_vertex!(pg::AbstractPropertyGraph) = add_vertex!(pg.g)
-
 function add_vertex!(pg::AbstractPropertyGraph, vlabel)
     added = add_vertex!(pg.g)
     if added
-        i = nv(pg)
-        pg.vindex[vlabel] = i
+        pindex = nv(pg)
+        pg.pindex[vlabel] = pindex
+        pg.vlabel[pindex] = vlabel
     end
     added
 end
@@ -111,7 +115,7 @@ add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
 # TODO: Add add_vertex!(pg, vlabel, props) method.
 
 # TODO: Figure out if this should be included:
-# add_vindex!(pg::AbstractPropertyGraph, i::Integer, vlabel) = ( pg.vindex[vlabel] = i )
+# add_vlabel!(pg::AbstractPropertyGraph, i::Integer, vlabel) = ( pg.pindex[vlabel] = i )
 
 # TODO: Add print methods.
 

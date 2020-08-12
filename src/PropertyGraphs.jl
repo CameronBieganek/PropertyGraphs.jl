@@ -8,6 +8,7 @@ import LightGraphs: add_vertex!, add_edge!, edges, vertices, nv, ne, inneighbors
 export AbstractPropertyGraph,
        LabeledVertexPropertyGraph,
        pindex,
+       vlabel,
        add_vindex!
 
 # LightGraphs re-exports

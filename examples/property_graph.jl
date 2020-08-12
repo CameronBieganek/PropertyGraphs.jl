@@ -30,3 +30,6 @@ pg["d"] = (color="pink", size=213)
 
 dijkstra_shortest_paths(pg, pindex(pg, "a"))
 enumerate_paths(dijkstra_shortest_paths(pg, pindex(pg, "a")), pindex(pg, "c"))
+
+vlabel(pg, 1)
+vlabel(pg, 2)
