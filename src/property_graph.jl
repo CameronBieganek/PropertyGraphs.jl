@@ -10,6 +10,27 @@ struct LabeledVertexPropertyGraph{L, P <: NamedTuple, T, G <: AbstractGraph{T}} 
 end
 
 
+function LabeledVertexPropertyGraph(
+        g::AbstractGraph{T};
+        vertex_label_type::Type,
+        vertex_properties_type::NamedTuple
+    ) where T
+
+    vindex = Dict{vertex_label_type, T}()
+
+    props = keys(vertex_properties_type)
+    prop_types = values(vertex_properties_type)
+
+    ps = map(props, prop_types) do p, PT
+        p => Dict{T, PT}()
+    end
+
+    vprops = (; ps...)
+
+    LabeledVertexPropertyGraph(g, vindex, vprops)
+end
+
+
 edges(pg::AbstractPropertyGraph) = edges(pg.g)
 vertices(pg::AbstractPropertyGraph) = vertices(pg.g)
 nv(pg::AbstractPropertyGraph) = nv(pg.g)
@@ -83,15 +104,15 @@ function add_vertex!(pg::AbstractPropertyGraph, i::Integer)
 end
 
 
-# TODO: Add add_vertex!(pg, vlabel, props) method.
+add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(pg.g, e)
+add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
 
+
+# TODO: Add add_vertex!(pg, vlabel, props) method.
 
 # TODO: Figure out if this should be included:
 # add_vindex!(pg::AbstractPropertyGraph, i::Integer, vlabel) = ( pg.vindex[vlabel] = i )
 
-
 # TODO: Add print methods.
 
-
-add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(pg.g, e)
-add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
+# TODO: Support get, get!, haskey, keys, values, etc, methods on VertexProperties?

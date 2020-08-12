@@ -4,13 +4,10 @@ using PropertyGraphs
 using LightGraphs
 
 pg = LabeledVertexPropertyGraph(
-    SimpleGraph{Int}(),
-    Dict{String, Int}(),
-    (color=Dict{Int, String}(), size=Dict{Int, Int}())
+    SimpleGraph{Int}();
+    vertex_label_type = String,
+    vertex_properties_type = (color=String, size=Int)
 )
-
-# Alternative constructor: (Doesn't work.)
-# pg = LabeledVertexPropertyGraph{String, (:color, :size), Tuple{String, Int}}(SimpleGraph{Int}())
 
 add_vertex!(pg, "a")
 add_vertex!(pg, "b")
@@ -30,3 +27,6 @@ add_edge!(pg, 1, "c")
 
 add_vertex!(pg, "d")
 pg["d"] = (color="pink", size=213)
+
+dijkstra_shortest_paths(pg, pindex(pg, "a"))
+enumerate_paths(dijkstra_shortest_paths(pg, pindex(pg, "a")), pindex(pg, "c"))
