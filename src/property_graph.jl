@@ -10,35 +10,18 @@ struct LabeledVertexPropertyGraph{L, P <: NamedTuple, T, G <: AbstractGraph{T}} 
 end
 
 
-# This doesn't seem to work. The input parameters seem to have to be compatible with the struct definition.
-# function LabeledVertexPropertyGraph{L, K, V}(g::AbstractGraph{T}) where {L, K, V <: Tuple, T <: Integer}
-#     println("hello world!")
-
-#     # vindex = Dict{L, T}()
-#     # @show vindex
-
-#     # d = [Dict{T, v}() for v in fieldtypes(V)]
-#     # @show d
-
-#     # vprops = (; Pair.(K, d)...)
-#     # @show vprops
-
-#     # LabeledVertexPropertyGraph(g, vindex, vprops)
-# end
-
-
 edges(pg::AbstractPropertyGraph) = edges(pg.g)
 vertices(pg::AbstractPropertyGraph) = vertices(pg.g)
 nv(pg::AbstractPropertyGraph) = nv(pg.g)
 ne(pg::AbstractPropertyGraph) = ne(pg.g)
-inneighbors(pg::AbstractPropertyGraph, v::Integer) = inneighbors(pg.g, pindex(pg, v))
-outneighbors(pg::AbstractPropertyGraph, v::Integer) = outneighbors(pg.g, pindex(pg, v))
+inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(pg.g, pindex(pg, v))
+outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(pg.g, pindex(pg, v))
 
 
 
 # Get the primitive index.
 pindex(pg::AbstractPropertyGraph, i::Integer) = i
-pindex(pg::AbstractPropertyGraph, label) = pg.vindex[label]
+pindex(pg::AbstractPropertyGraph, vlabel) = pg.vindex[vlabel]
 
 pindex(pg::AbstractPropertyGraph, e::Edge) = e
 pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
@@ -46,54 +29,68 @@ pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
 
 struct VertexProperties{G <: AbstractPropertyGraph, L}
     g::G
-    label::L
+    vlabel::L
 end
 
 
 get_graph(vp::VertexProperties) = getfield(vp, :g)
-get_label(vp::VertexProperties) = getfield(vp, :label)
+get_vlabel(vp::VertexProperties) = getfield(vp, :vlabel)
 
 
 getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
 
 
-
-function getproperty(vp::VertexProperties, sym::Symbol)
+function getproperty(vp::VertexProperties, prop::Symbol)
     g = get_graph(vp)
-    label = get_label(vp)
-    g.vprops[sym][pindex(g, label)]
+    vlabel = get_vlabel(vp)
+    g.vprops[prop][pindex(g, vlabel)]
 end
 
 
-function setproperty!(vp::VertexProperties, sym::Symbol, val)
+function setproperty!(vp::VertexProperties, prop::Symbol, val)
     g = get_graph(vp)
-    label = get_label(vp)
-    g.vprops[sym][pindex(g, label)] = val
+    vlabel = get_vlabel(vp)
+    g.vprops[prop][pindex(g, vlabel)] = val
 end
 
 
-# TODO: Add setindex! to allow setting all vertex properties at once.
+getindex(vp::VertexProperties, prop::Symbol) = getproperty(vp, prop)
+setindex!(vp::VertexProperties, val, prop::Symbol) = setproperty!(vp, prop, val)
+
+
+function setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
+    for (k, v) in pairs(kvs)
+        pg[vlabel][k] = v
+    end
+    pairs
+end
 
 
 add_vertex!(pg::AbstractPropertyGraph) = add_vertex!(pg.g)
 
-function add_vertex!(pg::AbstractPropertyGraph, label)
+function add_vertex!(pg::AbstractPropertyGraph, vlabel)
     added = add_vertex!(pg.g)
     if added
         i = nv(pg)
-        pg.vindex[label] = i
+        pg.vindex[vlabel] = i
     end
     added
 end
 
 function add_vertex!(pg::AbstractPropertyGraph, i::Integer)
-    msg = "The syntax `add_vertex!(pg, label)` is reserved for adding a vertex with a custom index"
+    msg = "The syntax `add_vertex!(pg, vlabel)` is reserved for adding a vertex with a custom index"
     throw(ArgumentError(msg))
 end
 
 
+# TODO: Add add_vertex!(pg, vlabel, props) method.
+
+
 # TODO: Figure out if this should be included:
-# add_vindex!(pg::AbstractPropertyGraph, i::Integer, label) = ( pg.vindex[label] = i )
+# add_vindex!(pg::AbstractPropertyGraph, i::Integer, vlabel) = ( pg.vindex[vlabel] = i )
+
+
+# TODO: Add print methods.
 
 
 add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(pg.g, e)

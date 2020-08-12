@@ -1,7 +1,5 @@
 
 
-
-
 using PropertyGraphs
 using LightGraphs
 
@@ -29,3 +27,6 @@ pg["c"].size = 42
 add_edge!(pg, 1, 2)
 add_edge!(pg, "b", "c")
 add_edge!(pg, 1, "c")
+
+add_vertex!(pg, "d")
+pg["d"] = (color="pink", size=213)

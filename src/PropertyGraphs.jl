@@ -1,7 +1,7 @@
 
 module PropertyGraphs
 
-import Base: getindex, getproperty, setproperty!
+import Base: getindex, setindex!, getproperty, setproperty!
 using LightGraphs
 import LightGraphs: add_vertex!, add_edge!, edges, vertices, nv, ne, inneighbors, outneighbors
 
