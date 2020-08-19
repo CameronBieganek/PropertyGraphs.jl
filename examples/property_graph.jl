@@ -9,6 +9,9 @@ pg = LabeledVertexPropertyGraph(
     vertex_properties_type = (color=String, size=Int)
 )
 
+pg.name = "this is a property graph"
+pg.weight = 123.456
+
 add_vertex!(pg, "a")
 add_vertex!(pg, "b")
 add_vertex!(pg, "c")
