@@ -43,18 +43,18 @@ setproperty!(pg::AbstractPropertyGraph, sym::Symbol, val) = get_gprops(pg)[sym] 
 propertynames(pg::AbstractPropertyGraph) = (keys(get_gprops(pg))..., )
 
 
-get_graph(pg::AbstractPropertyGraph) = getfield(pg, :g)
+get_g(pg::AbstractPropertyGraph) = getfield(pg, :g)
 get_pindex(pg::AbstractPropertyGraph) = getfield(pg, :pindex)
 get_vlabel(pg::AbstractPropertyGraph) = getfield(pg, :vlabel)
 get_vprops(pg::AbstractPropertyGraph) = getfield(pg, :vprops)
 
 
-edges(pg::AbstractPropertyGraph) = edges(get_graph(pg))
-vertices(pg::AbstractPropertyGraph) = vertices(get_graph(pg))
-nv(pg::AbstractPropertyGraph) = nv(get_graph(pg))
-ne(pg::AbstractPropertyGraph) = ne(get_graph(pg))
-inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_graph(pg), pindex(pg, v))
-outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_graph(pg), pindex(pg, v))
+edges(pg::AbstractPropertyGraph) = edges(get_g(pg))
+vertices(pg::AbstractPropertyGraph) = vertices(get_g(pg))
+nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
+ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
+inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
+outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
 
 
 # Get the primitive index.
@@ -69,13 +69,13 @@ pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
 vlabel(pg::AbstractPropertyGraph, pindex::Integer) = get_vlabel(pg)[pindex]
 
 
-struct VertexProperties{G <: AbstractPropertyGraph, L}
-    g::G
+struct VertexProperties{PG <: AbstractPropertyGraph, L}
+    pg::PG
     vlabel::L
 end
 
 
-get_graph(vp::VertexProperties) = getfield(vp, :g)
+get_pg(vp::VertexProperties) = getfield(vp, :pg)
 get_vlabel(vp::VertexProperties) = getfield(vp, :vlabel)
 
 
@@ -83,16 +83,16 @@ getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
 
 
 function getproperty(vp::VertexProperties, prop::Symbol)
-    g = get_graph(vp)
+    pg = get_pg(vp)
     vlabel = get_vlabel(vp)
-    get_vprops(g)[prop][pindex(g, vlabel)]
+    get_vprops(pg)[prop][pindex(pg, vlabel)]
 end
 
 
 function setproperty!(vp::VertexProperties, prop::Symbol, val)
-    g = get_graph(vp)
+    pg = get_pg(vp)
     vlabel = get_vlabel(vp)
-    get_vprops(g)[prop][pindex(g, vlabel)] = val
+    get_vprops(pg)[prop][pindex(pg, vlabel)] = val
 end
 
 
@@ -109,12 +109,17 @@ end
 
 
 function add_vertex!(pg::AbstractPropertyGraph, vlabel)
-    added = add_vertex!(get_graph(pg))
+    if haskey(get_pindex(pg), vlabel)
+        return false
+    end
+
+    added = add_vertex!(get_g(pg))
     if added
         pindex = nv(pg)
         get_pindex(pg)[vlabel] = pindex
         get_vlabel(pg)[pindex] = vlabel
     end
+
     added
 end
 
@@ -124,9 +129,11 @@ function add_vertex!(pg::AbstractPropertyGraph, i::Integer)
 end
 
 
-add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_graph(pg), e)
+add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_g(pg), e)
 add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
 
+
+# TODO: Throw an exception in pg["asdf"] if there is no node with the label "asdf".
 
 # TODO: Add add_vertex!(pg, vlabel, props) method.
 
@@ -138,3 +145,5 @@ add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
 # TODO: Support get, get!, haskey, keys, values, etc, methods on VertexProperties?
 
 # TODO: Make property graphs broadcast like a scalar. This enables vlabel.(g, inneighbors(g, label))
+
+# TODO: Use Bijections.jl ?
