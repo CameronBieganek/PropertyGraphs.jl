@@ -9,7 +9,7 @@ export AbstractPropertyGraph,
        LabeledVertexPropertyGraph,
        pindex,
        vlabel,
-       add_vindex!
+       vlabels
 
 # LightGraphs re-exports
 export add_vertex!,

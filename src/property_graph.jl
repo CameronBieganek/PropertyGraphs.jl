@@ -69,6 +69,9 @@ pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
 vlabel(pg::AbstractPropertyGraph, pindex::Integer) = get_vlabel(pg)[pindex]
 
 
+vlabels(pg::AbstractPropertyGraph) = keys(get_pindex(pg))
+
+
 struct VertexProperties{PG <: AbstractPropertyGraph, L}
     pg::PG
     vlabel::L
@@ -109,7 +112,7 @@ end
 
 
 function add_vertex!(pg::AbstractPropertyGraph, vlabel)
-    if haskey(get_pindex(pg), vlabel)
+    if vlabel in vlabels(pg)
         return false
     end
 
