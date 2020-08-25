@@ -69,7 +69,11 @@ pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
 vlabel(pg::AbstractPropertyGraph, pindex::Integer) = get_vlabel(pg)[pindex]
 
 
-vlabels(pg::AbstractPropertyGraph) = keys(get_pindex(pg))
+function vlabels(pg::AbstractPropertyGraph)
+    # This ensures that vertex labels are returned in the same order as vertices(pg).
+    pindices = vertices(pg)
+    [vlabel(pg, i) for i in pindices]
+end
 
 
 struct VertexProperties{PG <: AbstractPropertyGraph, L}
