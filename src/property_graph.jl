@@ -55,6 +55,7 @@ nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
 ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
 inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
 outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
+is_directed(pg::AbstractPropertyGraph) = is_directed(pg.g)
 
 
 # Get the primitive index.

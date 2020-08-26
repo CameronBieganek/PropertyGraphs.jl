@@ -19,7 +19,8 @@ export add_vertex!,
        nv,
        ne,
        inneighbors,
-       outneighbors
+       outneighbors,
+       is_directed
 
 include("property_graph.jl")
 
