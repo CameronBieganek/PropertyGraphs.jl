@@ -61,9 +61,9 @@ end
 get_gprops(pg::AbstractPropertyGraph) = getfield(pg, :gprops)
 
 
-getproperty(pg::AbstractPropertyGraph, sym::Symbol) = get_gprops(pg)[sym]
-setproperty!(pg::AbstractPropertyGraph, sym::Symbol, val) = get_gprops(pg)[sym] = val
-propertynames(pg::AbstractPropertyGraph) = (keys(get_gprops(pg))..., )
+Base.getproperty(pg::AbstractPropertyGraph, sym::Symbol) = get_gprops(pg)[sym]
+Base.setproperty!(pg::AbstractPropertyGraph, sym::Symbol, val) = get_gprops(pg)[sym] = val
+Base.propertynames(pg::AbstractPropertyGraph) = (keys(get_gprops(pg))..., )
 
 
 get_g(pg::AbstractPropertyGraph) = getfield(pg, :g)
@@ -72,19 +72,19 @@ get_vlabel(pg::AbstractPropertyGraph) = getfield(pg, :vlabel)
 get_vprops(pg::AbstractPropertyGraph) = getfield(pg, :vprops)
 
 
-edges(pg::AbstractPropertyGraph) = edges(get_g(pg))
-vertices(pg::AbstractPropertyGraph) = vertices(get_g(pg))
-nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
-ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
-inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
-outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
+LightGraphs.edges(pg::AbstractPropertyGraph) = edges(get_g(pg))
+LightGraphs.vertices(pg::AbstractPropertyGraph) = vertices(get_g(pg))
+LightGraphs.nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
+LightGraphs.ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
+LightGraphs.inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
+LightGraphs.outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
 
 
-function is_directed(::Type{LabeledVertexPropertyGraph{L, P, T, G}}) where {L, P, T, G <: AbstractGraph}
+function LightGraphs.is_directed(::Type{LabeledVertexPropertyGraph{L, P, T, G}}) where {L, P, T, G <: AbstractGraph}
     is_directed(G)
 end
 
-is_directed(pg::LabeledVertexPropertyGraph) = is_directed(pg.g)
+LightGraphs.is_directed(pg::LabeledVertexPropertyGraph) = is_directed(get_g(pg))
 
 
 # Get the primitive index.
@@ -116,28 +116,28 @@ get_pg(vp::VertexProperties) = getfield(vp, :pg)
 get_vlabel(vp::VertexProperties) = getfield(vp, :vlabel)
 
 
-getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
+Base.getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
 
 
-function getproperty(vp::VertexProperties, prop::Symbol)
+function Base.getproperty(vp::VertexProperties, prop::Symbol)
     pg = get_pg(vp)
     vlabel = get_vlabel(vp)
     get_vprops(pg)[prop][pindex(pg, vlabel)]
 end
 
 
-function setproperty!(vp::VertexProperties, prop::Symbol, val)
+function Base.setproperty!(vp::VertexProperties, prop::Symbol, val)
     pg = get_pg(vp)
     vlabel = get_vlabel(vp)
     get_vprops(pg)[prop][pindex(pg, vlabel)] = val
 end
 
 
-getindex(vp::VertexProperties, prop::Symbol) = getproperty(vp, prop)
-setindex!(vp::VertexProperties, val, prop::Symbol) = setproperty!(vp, prop, val)
+Base.getindex(vp::VertexProperties, prop::Symbol) = getproperty(vp, prop)
+Base.setindex!(vp::VertexProperties, val, prop::Symbol) = setproperty!(vp, prop, val)
 
 
-function setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
+function Base.setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
     for (k, v) in pairs(kvs)
         pg[vlabel][k] = v
     end
@@ -145,7 +145,7 @@ function setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
 end
 
 
-function add_vertex!(pg::AbstractPropertyGraph, vlabel)
+function LightGraphs.add_vertex!(pg::AbstractPropertyGraph, vlabel)
     if vlabel in vlabels(pg)
         return false
     end
@@ -160,14 +160,14 @@ function add_vertex!(pg::AbstractPropertyGraph, vlabel)
     added
 end
 
-function add_vertex!(pg::AbstractPropertyGraph, i::Integer)
+function LightGraphs.add_vertex!(pg::AbstractPropertyGraph, i::Integer)
     msg = "The syntax `add_vertex!(pg, vlabel)` is reserved for adding a vertex with a custom index"
     throw(ArgumentError(msg))
 end
 
 
-add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_g(pg), e)
-add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
+LightGraphs.add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_g(pg), e)
+LightGraphs.add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
 
 
 # TODO: Throw an exception in pg["asdf"] if there is no node with the label "asdf".

@@ -37,3 +37,5 @@ enumerate_paths(dijkstra_shortest_paths(pg, pindex(pg, "a")), pindex(pg, "c"))
 
 vlabel(pg, 1)
 vlabel(pg, 2)
+
+is_directed(pg)
