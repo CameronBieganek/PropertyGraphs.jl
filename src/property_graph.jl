@@ -1,5 +1,28 @@
 
 
+# Possible design:
+
+# struct PropertyGraph{T,
+#                      G <: AbstractGraph,
+#                      L <: AbstractVertexLabels,  # Use Bijections.jl
+#                      GP <: AbstractGraphProperties,
+#                      VP <: AbstractVertexProperties,
+#                      EP <: AbstractEdgeProperties}
+#     g::G
+#     vlabel::VP
+#     gprops::GP
+#     vprops::VP
+#     eprops::EP
+# end
+
+# struct NoVertexProperties <: AbstractVertexProperties end
+# struct NoVertexLabels <: AbstractVertexProperties end
+# etc
+#
+# struct PropertyDiGraph ...
+# is_directed(::Type{<:PropertyDiGraph}) = true
+
+
 abstract type AbstractPropertyGraph{T} <: AbstractGraph{T} end
 
 
@@ -55,14 +78,20 @@ nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
 ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
 inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
 outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
-is_directed(pg::AbstractPropertyGraph) = is_directed(pg.g)
+
+
+function is_directed(::Type{LabeledVertexPropertyGraph{L, P, T, G}}) where {L, P, T, G <: AbstractGraph}
+    is_directed(G)
+end
+
+is_directed(pg::LabeledVertexPropertyGraph) = is_directed(pg.g)
 
 
 # Get the primitive index.
-pindex(pg::AbstractPropertyGraph, i::Integer) = i
+pindex(::AbstractPropertyGraph, i::Integer) = i
 pindex(pg::AbstractPropertyGraph, vlabel) = get_pindex(pg)[vlabel]
 
-pindex(pg::AbstractPropertyGraph, e::Edge) = e
+pindex(::AbstractPropertyGraph, e::Edge) = e
 pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
 
 

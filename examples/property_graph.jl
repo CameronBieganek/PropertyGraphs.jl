@@ -1,6 +1,7 @@
 
 
-using PropertyGraphs
+include("/Users/bieganek/projects/PropertyGraphs.jl/src/PropertyGraphs.jl")
+using .PropertyGraphs
 using LightGraphs
 
 pg = LabeledVertexPropertyGraph(
