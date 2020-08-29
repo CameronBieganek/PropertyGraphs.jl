@@ -49,7 +49,7 @@ function LabeledVertexPropertyGraph(
     prop_types = values(vertex_properties_type)
 
     ps = map(props, prop_types) do p, PT
-        p => Dict{T, PT}()
+        p => Dict{vertex_label_type, PT}()
     end
 
     vprops = (; ps...)
@@ -80,7 +80,7 @@ LightGraphs.inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), p
 LightGraphs.outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
 
 
-function LightGraphs.is_directed(::Type{LabeledVertexPropertyGraph{L, P, T, G}}) where {L, P, T, G <: AbstractGraph}
+function LightGraphs.is_directed(::Type{LabeledVertexPropertyGraph{L,P,T,G}}) where {L,P,T,G<:AbstractGraph}
     is_directed(G)
 end
 
@@ -122,14 +122,14 @@ Base.getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
 function Base.getproperty(vp::VertexProperties, prop::Symbol)
     pg = get_pg(vp)
     vlabel = get_vlabel(vp)
-    get_vprops(pg)[prop][pindex(pg, vlabel)]
+    get_vprops(pg)[prop][vlabel]
 end
 
 
 function Base.setproperty!(vp::VertexProperties, prop::Symbol, val)
     pg = get_pg(vp)
     vlabel = get_vlabel(vp)
-    get_vprops(pg)[prop][pindex(pg, vlabel)] = val
+    get_vprops(pg)[prop][vlabel] = val
 end
 
 
