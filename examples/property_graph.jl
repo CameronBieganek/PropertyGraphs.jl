@@ -25,6 +25,8 @@ pg["a"].size = 10
 pg["b"].size = 123
 pg["c"].size = 42
 
+propertynames(pg["a"])
+
 add_edge!(pg, 1, 2)
 add_edge!(pg, "b", "c")
 add_edge!(pg, 1, "c")
@@ -39,3 +41,5 @@ vlabel(pg, 1)
 vlabel(pg, 2)
 
 is_directed(pg)
+
+rem_vertex!(pg, "a")

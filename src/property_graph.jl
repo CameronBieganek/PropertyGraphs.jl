@@ -133,6 +133,9 @@ function Base.setproperty!(vp::VertexProperties, prop::Symbol, val)
 end
 
 
+Base.propertynames(vp::VertexProperties) = propertynames(get_vprops(get_pg(vp)))
+
+
 Base.getindex(vp::VertexProperties, prop::Symbol) = getproperty(vp, prop)
 Base.setindex!(vp::VertexProperties, val, prop::Symbol) = setproperty!(vp, prop, val)
 
@@ -168,6 +171,39 @@ end
 
 LightGraphs.add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_g(pg), e)
 LightGraphs.add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
+
+
+function Base.delete!(vp::VertexProperties, prop::Symbol)
+    pg     = get_pg(vp)
+    vlabel = get_vlabel(vp)
+    vprops = get_vprops(pg)
+    delete!(vprops[prop], vlabel)
+end
+
+function LightGraphs.rem_vertex!(pg::AbstractPropertyGraph, vertex_label)
+    pind = pindex(pg, vertex_label)
+    last_pind = nv(pg)
+    removed = rem_vertex!(get_g(pg), pind)
+
+    if removed
+        vp = pg[vertex_label]
+        for prop in propertynames(vp)
+            delete!(vp, prop)
+        end
+
+        pindex_lookup = get_pindex(pg)
+        vlabel_lookup = get_vlabel(pg)
+        last_vlabel = vlabel(pg, last_pind)
+
+        pindex_lookup[last_vlabel] = pind
+        delete!(pindex_lookup, vertex_label)
+
+        vlabel_lookup[pind] = last_vlabel
+        delete!(vlabel_lookup, last_pind)
+    end
+
+    removed
+end
 
 
 # TODO: Throw an exception in pg["asdf"] if there is no node with the label "asdf".
