@@ -7,8 +7,10 @@ export AbstractPropertyGraph,
        LabeledVertexPropertyGraph,
        pindex,
        vlabel,
-       vlabels
+       vlabels,
+       write_dot
 
 include("property_graph.jl")
+include("dot.jl")
 
 end

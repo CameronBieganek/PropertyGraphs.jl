@@ -33,6 +33,7 @@ add_edge!(pg, 1, "c")
 
 add_vertex!(pg, "d")
 pg["d"] = (color="pink", size=213)
+add_edge!(pg, "c", "d")
 
 dijkstra_shortest_paths(pg, pindex(pg, "a"))
 enumerate_paths(dijkstra_shortest_paths(pg, pindex(pg, "a")), pindex(pg, "c"))
@@ -46,5 +47,7 @@ is_directed(pg)
 "asdf" in pg
 "b" ∉ pg
 "asdf" ∉ pg
+
+write_dot("/Users/bieganek/test.dot", pg)
 
 rem_vertex!(pg, "a")
