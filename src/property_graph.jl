@@ -72,6 +72,10 @@ get_vlabel(pg::AbstractPropertyGraph) = getfield(pg, :vlabel)
 get_vprops(pg::AbstractPropertyGraph) = getfield(pg, :vprops)
 
 
+Base.in(vlabel, pg::AbstractPropertyGraph) = haskey(get_pindex(pg), vlabel)
+Base.:∉(vlabel, pg::AbstractPropertyGraph) = !in(vlabel, pg)
+
+
 LightGraphs.edges(pg::AbstractPropertyGraph) = edges(get_g(pg))
 LightGraphs.vertices(pg::AbstractPropertyGraph) = vertices(get_g(pg))
 LightGraphs.nv(pg::AbstractPropertyGraph) = nv(get_g(pg))

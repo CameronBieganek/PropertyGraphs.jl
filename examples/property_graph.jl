@@ -42,4 +42,9 @@ vlabel(pg, 2)
 
 is_directed(pg)
 
+"b" in pg
+"asdf" in pg
+"b" ∉ pg
+"asdf" ∉ pg
+
 rem_vertex!(pg, "a")
