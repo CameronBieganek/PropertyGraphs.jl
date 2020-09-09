@@ -152,6 +152,14 @@ function Base.setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
 end
 
 
+function Base.get(vp::VertexProperties, prop::Symbol, default)
+    pg = get_pg(vp)
+    vlabel = get_vlabel(vp)
+    propd = get_vprops(pg)[prop]
+    get(propd, vlabel, default)
+end
+
+
 function LightGraphs.add_vertex!(pg::AbstractPropertyGraph, vlabel)
     if vlabel in vlabels(pg)
         return false
