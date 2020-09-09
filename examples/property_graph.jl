@@ -51,3 +51,7 @@ is_directed(pg)
 write_dot("/Users/bieganek/test.dot", pg)
 
 rem_vertex!(pg, "a")
+
+add_vertex!(pg, "e")
+pg["e"].color = "black"
+get(pg["e"], :size, -1)
