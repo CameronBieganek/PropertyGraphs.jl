@@ -192,6 +192,8 @@ function Base.delete!(vp::VertexProperties, prop::Symbol)
     delete!(vprops[prop], vlabel)
 end
 
+# NOTE: This unfortunately has to assume that the underlying graph is a LightGraphs.SimpleGraph,
+# since LightGraphs does not provide a generic API for adding and removing nodes.
 function LightGraphs.rem_vertex!(pg::AbstractPropertyGraph, vertex_label)
     pind = pindex(pg, vertex_label)
     last_pind = nv(pg)
