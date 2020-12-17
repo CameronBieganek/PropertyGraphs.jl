@@ -2,15 +2,16 @@
 module PropertyGraphs
 
 using LightGraphs
+using Bijections
 
-export AbstractPropertyGraph,
-       LabeledVertexPropertyGraph,
-       pindex,
-       vlabel,
-       vlabels,
-       write_dot
+export
+    NoEdgeProperties,
+    NoVertexProperties,
+    PropertyGraph,
+    vlabels,
+    vcode
 
-include("property_graph.jl")
-include("dot.jl")
+include("property_graph_v2.jl")
+# include("dot.jl")
 
 end
