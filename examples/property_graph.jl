@@ -3,54 +3,128 @@
 using PropertyGraphs
 using LightGraphs
 
-pg = LabeledVertexPropertyGraph(
-    SimpleGraph{Int}();
-    vertex_label_type = String,
-    vertex_properties_type = (color=String, size=Int)
-)
 
-pg.name = "this is a property graph"
-pg.weight = 123.456
+
+mutable struct VertexProperties
+    color::String
+    size::Float64
+end
+
+
+
+# -------- String vertex labels. --------
+
+pg = SimplePropertyGraph{Int, String, VertexProperties}()
 
 add_vertex!(pg, "a")
 add_vertex!(pg, "b")
 add_vertex!(pg, "c")
-
-pg["a"].color = "blue"
-pg["b"].color = "red"
-pg["c"].color = "yellow"
-
-pg["a"].size = 10
-pg["b"].size = 123
-pg["c"].size = 42
-
-propertynames(pg["a"])
-
-add_edge!(pg, 1, 2)
-add_edge!(pg, "b", "c")
-add_edge!(pg, 1, "c")
-
-add_vertex!(pg, "d")
-pg["d"] = (color="pink", size=213)
-add_edge!(pg, "c", "d")
-
-dijkstra_shortest_paths(pg, pindex(pg, "a"))
-enumerate_paths(dijkstra_shortest_paths(pg, pindex(pg, "a")), pindex(pg, "c"))
-
-vlabel(pg, 1)
-vlabel(pg, 2)
-
-is_directed(pg)
 
 "b" in pg
 "asdf" in pg
 "b" ∉ pg
 "asdf" ∉ pg
 
+add_edge!(pg, "a", "b")
+add_edge!(pg, "b", "c")
+add_edge!(pg, pg("a", "c"))
+
+pg["a"] = VertexProperties("red", 3.4)
+pg["b"] = VertexProperties("blue", 1.9)
+pg["c"] = VertexProperties("yellow", 7.0)
+
+pg["a"]
+pg["b"]
+pg["c"]
+
+pg("a")
+pg("b")
+pg("c")
+pg("a", "b")
+
+label(pg, 1)
+label(pg, 2)
+label(pg, 3)
+label.(pg, [1, 2, 3])
+
+pg["a"].color
+pg["a"].color = "pink"
+pg["a"].color
+
+pg["b"].size
+pg["b"].size = 100.2
+pg["b"].size
+
+paths = dijkstra_shortest_paths(pg, pg("a"))
+enumerate_paths(paths, pg("c"))
+
+
+
+# -------- Integer vertex labels. --------
+
+pg2 = SimplePropertyGraph{Int, Int, VertexProperties}()
+
+add_vertex!(pg2, 101)
+add_vertex!(pg2, 102)
+add_vertex!(pg2, 103)
+
+add_edge!(pg2, 101, 102)
+add_edge!(pg2, 102, 103)
+add_edge!(pg2, 101, 103)
+
+pg2[101] = VertexProperties("red", 3.4)
+pg2[102] = VertexProperties("blue", 1.9)
+pg2[103] = VertexProperties("yellow", 7.0)
+
+pg2[101]
+pg2[102]
+pg2[103]
+
+
+
+# -------- Directed graph. --------
+
+pg = SimplePropertyDiGraph{Int, String, VertexProperties}()
+
+add_vertex!(pg, "a")
+add_vertex!(pg, "b")
+add_vertex!(pg, "c")
+
+add_edge!(pg, "a", "b")
+add_edge!(pg, "b", "c")
+add_edge!(pg, pg("a", "c"))
+
+pg["a"] = VertexProperties("red", 3.4)
+pg["b"] = VertexProperties("blue", 1.9)
+pg["c"] = VertexProperties("yellow", 7.0)
+
+paths = dijkstra_shortest_paths(pg, pg("a"))
+enumerate_paths(paths, pg("c"))
+
+
+
+# -------- Remove vertex. --------
+
+pg = SimplePropertyDiGraph{Int, String, VertexProperties}()
+
+add_vertex!(pg, "a")
+add_vertex!(pg, "b")
+add_vertex!(pg, "c")
+add_vertex!(pg, "d")
+add_vertex!(pg, "e")
+
+pg["a"] = VertexProperties("red", 3.4)
+pg["b"] = VertexProperties("blue", 1.9)
+pg["c"] = VertexProperties("yellow", 7.0)
+pg["d"] = VertexProperties("pink", 42)
+pg["e"] = VertexProperties("orange", 100)
+
+add_edge!(pg, "a", "b")
+add_edge!(pg, "b", "c")
+add_edge!(pg, "c", "d")
+add_edge!(pg, "d", "e")
+add_edge!(pg, "e", "a")
+
 write_dot("/Users/bieganek/test.dot", pg)
 
-rem_vertex!(pg, "a")
-
-add_vertex!(pg, "e")
-pg["e"].color = "black"
-get(pg["e"], :size, -1)
+rem_vertex!(pg, "b")

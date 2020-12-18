@@ -14,7 +14,7 @@ export
     labels,
     write_dot
 
-include("property_graph_v2.jl")
+include("property_graph.jl")
 include("dot.jl")
 
 end

@@ -1,236 +1,141 @@
 
 
-# Possible design:
+# -------- TODO!!! --------
 
-# struct PropertyGraph{T,
-#                      G <: AbstractGraph,
-#                      L <: AbstractVertexLabels,  # Use Bijections.jl
-#                      GP <: AbstractGraphProperties,
-#                      VP <: AbstractVertexProperties,
-#                      EP <: AbstractEdgeProperties}
-#     g::G
-#     vlabel::VP
-#     gprops::GP
-#     vprops::VP
-#     eprops::EP
-# end
+# Add tests.
 
-# struct NoVertexProperties <: AbstractVertexProperties end
-# struct NoVertexLabels <: AbstractVertexProperties end
-# etc
-#
-# struct PropertyDiGraph ...
-# is_directed(::Type{<:PropertyDiGraph}) = true
+# Add docs.
+
+# Add get, get!, haskey.
+
+# Implement Edge properties.
+
+# Implement weights functionality.
+
+# Rename labels() to keys() ?
+# Although if you have both vertex properties and edge properties, it's
+# less clear what the keys are and what the values are, since there's actually
+# two dictionaries.
+
+# Perhaps use labels() and edge_labels() instead of keys() ?
+
+# Add vertex_properties() and edge_properties() instead of values() ?
+
+# Add show() method.
+
+# Add merge, join, union, etc, methods.
+
+# ---------------------------
 
 
-abstract type AbstractPropertyGraph{T} <: AbstractGraph{T} end
+
+struct NoVertexProperties end
+struct NoEdgeProperties end
 
 
-struct LabeledVertexPropertyGraph{L, P <: NamedTuple, T, G <: AbstractGraph{T}} <: AbstractPropertyGraph{T}
-    g       ::  G
-    gprops  ::  Dict{Symbol, Any}
-    pindex  ::  Dict{L, T}         # map from vertex label to primitive index
-    vlabel  ::  Dict{T, L}         # map from primitive index to vertex label
-    vprops  ::  P                  # vertex property data
+# V and E are any types with getproperty() defined.
+struct PropertyGraph{T, G <: AbstractGraph{T}, L, V, E} <: AbstractGraph{T}
+    g::G
+    vmap::Bijection{L, T}
+    vprops::Dict{L, V}    # Make these Union{No*, Dict{T, R}} etc?
+    eprops::Dict{L, E}    # This should actually be something like Dict{Edge, EP} or Dict{Tuple{VL,VL}, EP}
 end
 
 
-function LabeledVertexPropertyGraph(
-        g::AbstractGraph{T};
-        vertex_label_type::Type,
-        vertex_properties_type::NamedTuple
-    ) where T
+Base.broadcastable(pg::PropertyGraph) = Ref(pg)
 
-    gprops = Dict{Symbol, Any}()
-    pindex = Dict{vertex_label_type, T}()
-    vlabel = Dict{T, vertex_label_type}()
 
-    props = keys(vertex_properties_type)
-    prop_types = values(vertex_properties_type)
-
-    ps = map(props, prop_types) do p, PT
-        p => Dict{vertex_label_type, PT}()
-    end
-
-    vprops = (; ps...)
-
-    LabeledVertexPropertyGraph(g, gprops, pindex, vlabel, vprops)
+function PropertyGraph{T, G, L, V, E}() where {T, G, L, V, E}
+    PropertyGraph(
+        G(),
+        Bijection{L, T}(),
+        Dict{L, V}(),
+        Dict{L, E}()
+    )
 end
 
 
-get_gprops(pg::AbstractPropertyGraph) = getfield(pg, :gprops)
+function PropertyGraph{T, G, L, V}() where {T, G, L, V}
+    PropertyGraph{T, G, L, V, NoEdgeProperties}()
+end
 
 
-Base.getproperty(pg::AbstractPropertyGraph, sym::Symbol) = get_gprops(pg)[sym]
-Base.setproperty!(pg::AbstractPropertyGraph, sym::Symbol, val) = get_gprops(pg)[sym] = val
-Base.propertynames(pg::AbstractPropertyGraph) = (keys(get_gprops(pg))..., )
+function PropertyGraph{T, G, L}() where {T, G, L}
+    PropertyGraph{T, G, L, NoVertexProperties}()
+end
 
 
-get_g(pg::AbstractPropertyGraph) = getfield(pg, :g)
-get_pindex(pg::AbstractPropertyGraph) = getfield(pg, :pindex)
-get_vlabel(pg::AbstractPropertyGraph) = getfield(pg, :vlabel)
-get_vprops(pg::AbstractPropertyGraph) = getfield(pg, :vprops)
+SimplePropertyGraph{T, L, V, E} = PropertyGraph{T, SimpleGraph{T}, L, V, E}
+SimplePropertyDiGraph{T, L, V, E} = PropertyGraph{T, SimpleDiGraph{T}, L, V, E}
+const SimpleAlias = Union{SimplePropertyGraph, SimplePropertyDiGraph}
 
 
-Base.in(vlabel, pg::AbstractPropertyGraph) = haskey(get_pindex(pg), vlabel)
-Base.:∉(vlabel, pg::AbstractPropertyGraph) = !in(vlabel, pg)
+(pg::PropertyGraph)(label) = pg.vmap[label]
+(pg::SimpleAlias)(src_label, dst_label) = Edge(pg(src_label), pg(dst_label))
 
 
-LightGraphs.edges(pg::AbstractPropertyGraph) = edges(get_g(pg))
-LightGraphs.vertices(pg::AbstractPropertyGraph) = vertices(get_g(pg))
-LightGraphs.nv(pg::AbstractPropertyGraph) = nv(get_g(pg))
-LightGraphs.ne(pg::AbstractPropertyGraph) = ne(get_g(pg))
-LightGraphs.inneighbors(pg::AbstractPropertyGraph, v) = inneighbors(get_g(pg), pindex(pg, v))
-LightGraphs.outneighbors(pg::AbstractPropertyGraph, v) = outneighbors(get_g(pg), pindex(pg, v))
+label(pg::PropertyGraph, code) = pg.vmap(code)
 
 
-function LightGraphs.is_directed(::Type{LabeledVertexPropertyGraph{L,P,T,G}}) where {L,P,T,G<:AbstractGraph}
+labels(pg::PropertyGraph) = domain(pg.vmap)
+Base.in(vlabel, pg::PropertyGraph) = (vlabel in labels(pg))
+
+
+LightGraphs.edges(pg::PropertyGraph) = edges(pg.g)
+LightGraphs.vertices(pg::PropertyGraph) = vertices(pg.g)
+LightGraphs.nv(pg::PropertyGraph) = nv(pg.g)
+LightGraphs.ne(pg::PropertyGraph) = ne(pg.g)
+LightGraphs.inneighbors(pg::PropertyGraph, code) = inneighbors(pg.g, code)
+LightGraphs.outneighbors(pg::PropertyGraph, code) = outneighbors(pg.g, code)
+
+
+function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,V,E}
     is_directed(G)
 end
 
-LightGraphs.is_directed(pg::LabeledVertexPropertyGraph) = is_directed(get_g(pg))
 
-
-# Get the primitive index.
-pindex(::AbstractPropertyGraph, i::Integer) = i
-pindex(pg::AbstractPropertyGraph, vlabel) = get_pindex(pg)[vlabel]
-
-pindex(::AbstractPropertyGraph, e::Edge) = e
-pindex(pg::AbstractPropertyGraph, u, v) = Edge(pindex(pg, u), pindex(pg, v))
-
-
-# Get the vertex label.
-vlabel(pg::AbstractPropertyGraph, pindex::Integer) = get_vlabel(pg)[pindex]
-
-
-function vlabels(pg::AbstractPropertyGraph)
-    # This ensures that vertex labels are returned in the same order as vertices(pg).
-    pindices = vertices(pg)
-    [vlabel(pg, i) for i in pindices]
-end
-
-
-struct VertexProperties{PG <: AbstractPropertyGraph, L}
-    pg::PG
-    vlabel::L
-end
-
-
-get_pg(vp::VertexProperties) = getfield(vp, :pg)
-get_vlabel(vp::VertexProperties) = getfield(vp, :vlabel)
-
-
-Base.getindex(pg::AbstractPropertyGraph, v) = VertexProperties(pg, v)
-
-
-function Base.getproperty(vp::VertexProperties, prop::Symbol)
-    pg = get_pg(vp)
-    vlabel = get_vlabel(vp)
-    get_vprops(pg)[prop][vlabel]
-end
-
-
-function Base.setproperty!(vp::VertexProperties, prop::Symbol, val)
-    pg = get_pg(vp)
-    vlabel = get_vlabel(vp)
-    get_vprops(pg)[prop][vlabel] = val
-end
-
-
-Base.propertynames(vp::VertexProperties) = propertynames(get_vprops(get_pg(vp)))
-
-
-Base.getindex(vp::VertexProperties, prop::Symbol) = getproperty(vp, prop)
-Base.setindex!(vp::VertexProperties, val, prop::Symbol) = setproperty!(vp, prop, val)
-
-
-function Base.setindex!(pg::LabeledVertexPropertyGraph, kvs, vlabel)
-    for (k, v) in pairs(kvs)
-        pg[vlabel][k] = v
-    end
-    pairs
-end
-
-
-function Base.get(vp::VertexProperties, prop::Symbol, default)
-    pg = get_pg(vp)
-    vlabel = get_vlabel(vp)
-    propd = get_vprops(pg)[prop]
-    get(propd, vlabel, default)
-end
-
-
-function LightGraphs.add_vertex!(pg::AbstractPropertyGraph, vlabel)
-    if vlabel in vlabels(pg)
+function LightGraphs.add_vertex!(pg::SimpleAlias, label)
+    if label in pg
         return false
     end
 
-    added = add_vertex!(get_g(pg))
+    added = add_vertex!(pg.g)
     if added
-        pindex = nv(pg)
-        get_pindex(pg)[vlabel] = pindex
-        get_vlabel(pg)[pindex] = vlabel
+        pg.vmap[label] = nv(pg)
     end
 
     added
 end
 
-function LightGraphs.add_vertex!(pg::AbstractPropertyGraph, i::Integer)
-    msg = "The syntax `add_vertex!(pg, vlabel)` is reserved for adding a vertex with a custom index"
-    throw(ArgumentError(msg))
+
+LightGraphs.add_edge!(pg::SimpleAlias, e::Edge) = add_edge!(pg.g, e)
+
+function LightGraphs.add_edge!(pg::SimpleAlias, src_label, dst_label)
+    add_edge!(pg, pg(src_label, dst_label))
 end
 
 
-LightGraphs.add_edge!(pg::AbstractPropertyGraph, e::Edge) = add_edge!(get_g(pg), e)
-LightGraphs.add_edge!(pg::AbstractPropertyGraph, u, v) = add_edge!(pg, pindex(pg, u, v))
+Base.setindex!(pg::PropertyGraph, val, label) = ( pg.vprops[label] = val )
+Base.getindex(pg::PropertyGraph, label) = pg.vprops[label]
 
 
-function Base.delete!(vp::VertexProperties, prop::Symbol)
-    pg     = get_pg(vp)
-    vlabel = get_vlabel(vp)
-    vprops = get_vprops(pg)
-    delete!(vprops[prop], vlabel)
-end
-
-# NOTE: This unfortunately has to assume that the underlying graph is a LightGraphs.SimpleGraph,
-# since LightGraphs does not provide a generic API for adding and removing nodes.
-function LightGraphs.rem_vertex!(pg::AbstractPropertyGraph, vertex_label)
-    pind = pindex(pg, vertex_label)
-    last_pind = nv(pg)
-    removed = rem_vertex!(get_g(pg), pind)
+function LightGraphs.rem_vertex!(pg::SimpleAlias, _label)
+    code = pg(_label)
+    last_code = nv(pg)
+    removed = rem_vertex!(pg.g, code)
 
     if removed
-        vp = pg[vertex_label]
-        for prop in propertynames(vp)
-            delete!(vp, prop)
-        end
+        delete!(pg.vprops, _label)
+        last_label = label(pg, last_code)
 
-        pindex_lookup = get_pindex(pg)
-        vlabel_lookup = get_vlabel(pg)
-        last_vlabel = vlabel(pg, last_pind)
-
-        pindex_lookup[last_vlabel] = pind
-        delete!(pindex_lookup, vertex_label)
-
-        vlabel_lookup[pind] = last_vlabel
-        delete!(vlabel_lookup, last_pind)
+        delete!(pg.vmap, _label)
+        # Bijections.jl requires deleting a key before changing its value.
+        delete!(pg.vmap, last_label)
+        pg.vmap[last_label] = code
     end
 
     removed
 end
 
 
-# TODO: Throw an exception in pg["asdf"] if there is no node with the label "asdf".
-
-# TODO: Add add_vertex!(pg, vlabel, props) method.
-
-# TODO: Figure out if this should be included:
-# add_vlabel!(pg::AbstractPropertyGraph, i::Integer, vlabel) = ( get_pindex(pg)[vlabel] = i )
-
-# TODO: Add print methods.
-
-# TODO: Support get, get!, haskey, keys, values, etc, methods on VertexProperties?
-
-# TODO: Make property graphs broadcast like a scalar. This enables vlabel.(g, inneighbors(g, label))
-
-# TODO: Use Bijections.jl ?
+Base.reverse!(pg::SimpleAlias) = reverse!(pg.g)
