@@ -1,9 +1,5 @@
 
 
-# TODO: Update write_dot().
-# TODO: Add reverse() method?
-
-
 # -------- TODO!!! --------
 
 # Add tests.
@@ -140,3 +136,6 @@ function LightGraphs.rem_vertex!(pg::SimpleAlias, _label)
 
     removed
 end
+
+
+Base.reverse!(pg::SimpleAlias) = reverse!(pg.g)
