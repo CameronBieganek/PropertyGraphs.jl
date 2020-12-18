@@ -1,6 +1,5 @@
 
 
-# TODO: Add rem_vertex!.
 # TODO: Update write_dot().
 # TODO: Add reverse() method?
 

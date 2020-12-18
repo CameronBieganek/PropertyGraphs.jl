@@ -11,9 +11,10 @@ export
     SimplePropertyDiGraph,
     PropertyGraph,
     label,
-    labels
+    labels,
+    write_dot
 
 include("property_graph_v2.jl")
-# include("dot.jl")
+include("dot.jl")
 
 end

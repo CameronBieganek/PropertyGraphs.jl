@@ -125,4 +125,6 @@ add_edge!(pg, "c", "d")
 add_edge!(pg, "d", "e")
 add_edge!(pg, "e", "a")
 
+write_dot("/Users/bieganek/test.dot", pg)
+
 rem_vertex!(pg, "b")
