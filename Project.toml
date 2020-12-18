@@ -4,4 +4,5 @@ authors = ["Cameron Bieganek"]
 version = "0.1.0"
 
 [deps]
+Bijections = "e2ed5e7c-b2de-5872-ae92-c73ca462fb04"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"

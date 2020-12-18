@@ -1,15 +1,12 @@
 
 
-function write_dot(path::AbstractString, pg::AbstractPropertyGraph)
-    labels = vlabels(pg)
-    pinds = [pindex(pg, v) for v in labels]
-
+function write_dot(path::AbstractString, pg::PropertyGraph)
     open(path, "w") do io
         println(io, "digraph G {")
         println(io, "rankdir=LR;")
 
-        foreach(pinds, labels) do i, l
-            println(io, "$i [label=$l];")
+        foreach(sort(collect(pg.vmap))) do (label, code)
+            println(io, "$code [label=$label];")
         end
 
         for e in edges(pg)
