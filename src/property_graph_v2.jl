@@ -4,41 +4,39 @@ struct NoVertexProperties end
 struct NoEdgeProperties end
 
 
-# TODO: Properly handle the case where there are no custom vertex labels.
+# TODO: Add rem_vertex!.
 
 
-# VP, EP, GP are any types with getproperty() defined.
-struct PropertyGraph{VL, VP, EP, G, T <: Integer} <: AbstractGraph{T}
+# V and E are any types with getproperty() defined.
+struct PropertyGraph{T, G <: AbstractGraph{T}, L, V, E} <: AbstractGraph{T}
     g::G
-    vmap::Bijection{VL, T}
-    vprops::Dict{VL, VP}     # Make these Union{No*, Dict{T, R}} etc?
-    eprops::Dict{VL, EP}     # This should actually be something like Dict{Edge, EP}
-                             # or Dict{Tuple{VL,VL}, EP}
+    vmap::Bijection{L, T}
+    vprops::Dict{L, V}    # Make these Union{No*, Dict{T, R}} etc?
+    eprops::Dict{L, E}    # This should actually be something like Dict{Edge, EP} or Dict{Tuple{VL,VL}, EP}
 end
 
 
-function PropertyGraph{VL, VP, EP, G, T}() where {VL, VP, EP, G, T}
-    if VL <: Integer
-        throw(ArgumentError("Vertex labels cannot be integers"))
-    end
-
+function PropertyGraph{T, G, L, V, E}() where {T, G, L, V, E}
     PropertyGraph(
         G(),
-        Bijection{VL, T}(),
-        Dict{VL, VP}(),
-        Dict{VL, EP}()
+        Bijection{L, T}(),
+        Dict{L, V}(),
+        Dict{L, E}()
     )
 end
 
 
-function PropertyGraph{VL, VP, EP}() where {VL, VP, EP}
-    PropertyGraph{VL, VP, EP, SimpleGraph, Int64}()
+function PropertyGraph{T, G, L, V}() where {T, G, L, V}
+    PropertyGraph{T, G, L, V, NoEdgeProperties}()
 end
 
 
-function PropertyGraph{VL, VP}() where {VL, VP}
-    PropertyGraph{VL, VP, NoEdgeProperties}()
+function PropertyGraph{T, G, L}() where {T, G, L}
+    PropertyGraph{T, G, L, NoVertexProperties}()
 end
+
+
+SimplePropertyGraph{T, L, V, E} = PropertyGraph{T, SimpleGraph{T}, L, V, E}
 
 
 vlabels(pg::PropertyGraph) = domain(pg.vmap)
@@ -58,12 +56,12 @@ LightGraphs.inneighbors(pg::PropertyGraph, vcode) = inneighbors(pg.g, vcode)
 LightGraphs.outneighbors(pg::PropertyGraph, vcode) = outneighbors(pg.g, vcode)
 
 
-function LightGraphs.is_directed(::Type{PropertyGraph{VL,VP,EP,G,T}}) where {VL,VP,EP,G,T}
+function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,V,E}
     is_directed(G)
 end
 
 
-function LightGraphs.add_vertex!(pg::PropertyGraph{VL,VP,EP,G,T}, vlabel) where {VL,VP,EP,G<:SimpleGraph,T}
+function LightGraphs.add_vertex!(pg::SimplePropertyGraph, vlabel)
     if vlabel in pg
         return false
     end
@@ -77,17 +75,7 @@ function LightGraphs.add_vertex!(pg::PropertyGraph{VL,VP,EP,G,T}, vlabel) where 
 end
 
 
-# TODO: Make this error occur when there is a vertex label, but not occur when vertex labels
-# are not being used.
-function LightGraphs.add_vertex!(::PropertyGraph, ::Integer)
-    msg = "The syntax `add_vertex!(pg, vlabel)` is reserved for adding a vertex with a non-integer label"
-    throw(ArgumentError(msg))
-end
-
-
-function LightGraphs.add_edge!(pg::PropertyGraph{VL,VP,EP,G,T}, u, v) where {VL,VP,EP,G<:SimpleGraph,T}
-    add_edge!(pg.g, Edge(pg, u, v))
-end
+LightGraphs.add_edge!(pg::SimplePropertyGraph, u, v) = add_edge!(pg.g, Edge(pg, u, v))
 
 
 Base.setindex!(pg::PropertyGraph, val, vlabel) = ( pg.vprops[vlabel] = val )

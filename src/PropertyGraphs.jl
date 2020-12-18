@@ -7,6 +7,7 @@ using Bijections
 export
     NoEdgeProperties,
     NoVertexProperties,
+    SimplePropertyGraph,
     PropertyGraph,
     vlabels,
     vcode
