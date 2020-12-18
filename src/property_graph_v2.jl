@@ -1,21 +1,41 @@
 
 
-struct NoVertexProperties end
-struct NoEdgeProperties end
-
-
 # TODO: Add rem_vertex!.
-# TODO: Test that shortest paths, etc, still work.
+# TODO: Update write_dot().
+# TODO: Add reverse() method?
 
-# TODO: Add get, get!, haskey.
+
+# -------- TODO!!! --------
+
+# Add tests.
+
+# Add docs.
+
+# Add get, get!, haskey.
+
 # Implement Edge properties.
+
 # Implement weights functionality.
+
 # Rename labels() to keys() ?
 # Although if you have both vertex properties and edge properties, it's
 # less clear what the keys are and what the values are, since there's actually
 # two dictionaries.
+
 # Perhaps use labels() and edge_labels() instead of keys() ?
+
 # Add vertex_properties() and edge_properties() instead of values() ?
+
+# Add show() method.
+
+# Add merge, join, union, etc, methods.
+
+# ---------------------------
+
+
+
+struct NoVertexProperties end
+struct NoEdgeProperties end
 
 
 # V and E are any types with getproperty() defined.
@@ -51,10 +71,12 @@ end
 
 
 SimplePropertyGraph{T, L, V, E} = PropertyGraph{T, SimpleGraph{T}, L, V, E}
+SimplePropertyDiGraph{T, L, V, E} = PropertyGraph{T, SimpleDiGraph{T}, L, V, E}
+const SimpleAlias = Union{SimplePropertyGraph, SimplePropertyDiGraph}
 
 
 (pg::PropertyGraph)(label) = pg.vmap[label]
-(pg::SimplePropertyGraph)(src_label, dst_label) = Edge(pg(src_label), pg(dst_label))
+(pg::SimpleAlias)(src_label, dst_label) = Edge(pg(src_label), pg(dst_label))
 
 
 label(pg::PropertyGraph, code) = pg.vmap(code)
@@ -77,7 +99,7 @@ function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,
 end
 
 
-function LightGraphs.add_vertex!(pg::SimplePropertyGraph, label)
+function LightGraphs.add_vertex!(pg::SimpleAlias, label)
     if label in pg
         return false
     end
@@ -91,12 +113,31 @@ function LightGraphs.add_vertex!(pg::SimplePropertyGraph, label)
 end
 
 
-LightGraphs.add_edge!(pg::SimplePropertyGraph, e::Edge) = add_edge!(pg.g, e)
+LightGraphs.add_edge!(pg::SimpleAlias, e::Edge) = add_edge!(pg.g, e)
 
-function LightGraphs.add_edge!(pg::SimplePropertyGraph, src_label, dst_label)
+function LightGraphs.add_edge!(pg::SimpleAlias, src_label, dst_label)
     add_edge!(pg, pg(src_label, dst_label))
 end
 
 
 Base.setindex!(pg::PropertyGraph, val, label) = ( pg.vprops[label] = val )
 Base.getindex(pg::PropertyGraph, label) = pg.vprops[label]
+
+
+function LightGraphs.rem_vertex!(pg::SimpleAlias, _label)
+    code = pg(_label)
+    last_code = nv(pg)
+    removed = rem_vertex!(pg.g, code)
+
+    if removed
+        delete!(pg.vprops, _label)
+        last_label = label(pg, last_code)
+
+        delete!(pg.vmap, _label)
+        # Bijections.jl requires deleting a key before changing its value.
+        delete!(pg.vmap, last_label)
+        pg.vmap[last_label] = code
+    end
+
+    removed
+end

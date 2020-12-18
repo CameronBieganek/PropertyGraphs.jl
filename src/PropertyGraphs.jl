@@ -8,6 +8,7 @@ export
     NoEdgeProperties,
     NoVertexProperties,
     SimplePropertyGraph,
+    SimplePropertyDiGraph,
     PropertyGraph,
     label,
     labels
