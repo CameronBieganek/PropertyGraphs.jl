@@ -22,7 +22,7 @@ add_vertex!(pg, "c")
 
 add_edge!(pg, "a", "b")
 add_edge!(pg, "b", "c")
-add_edge!(pg, "a", "c")
+add_edge!(pg, pg("a", "c"))
 
 pg["a"] = VertexProperties("red", 3.4)
 pg["b"] = VertexProperties("blue", 1.9)
@@ -31,6 +31,16 @@ pg["c"] = VertexProperties("yellow", 7.0)
 pg["a"]
 pg["b"]
 pg["c"]
+
+pg("a")
+pg("b")
+pg("c")
+pg("a", "b")
+
+label(pg, 1)
+label(pg, 2)
+label(pg, 3)
+label.(pg, [1, 2, 3])
 
 pg["a"].color
 pg["a"].color = "pink"

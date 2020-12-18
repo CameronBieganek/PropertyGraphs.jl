@@ -9,8 +9,8 @@ export
     NoVertexProperties,
     SimplePropertyGraph,
     PropertyGraph,
-    vlabels,
-    vcode
+    label,
+    labels
 
 include("property_graph_v2.jl")
 # include("dot.jl")

@@ -5,6 +5,17 @@ struct NoEdgeProperties end
 
 
 # TODO: Add rem_vertex!.
+# TODO: Test that shortest paths, etc, still work.
+
+# TODO: Add get, get!, haskey.
+# Implement Edge properties.
+# Implement weights functionality.
+# Rename labels() to keys() ?
+# Although if you have both vertex properties and edge properties, it's
+# less clear what the keys are and what the values are, since there's actually
+# two dictionaries.
+# Perhaps use labels() and edge_labels() instead of keys() ?
+# Add vertex_properties() and edge_properties() instead of values() ?
 
 
 # V and E are any types with getproperty() defined.
@@ -14,6 +25,9 @@ struct PropertyGraph{T, G <: AbstractGraph{T}, L, V, E} <: AbstractGraph{T}
     vprops::Dict{L, V}    # Make these Union{No*, Dict{T, R}} etc?
     eprops::Dict{L, E}    # This should actually be something like Dict{Edge, EP} or Dict{Tuple{VL,VL}, EP}
 end
+
+
+Base.broadcastable(pg::PropertyGraph) = Ref(pg)
 
 
 function PropertyGraph{T, G, L, V, E}() where {T, G, L, V, E}
@@ -39,21 +53,23 @@ end
 SimplePropertyGraph{T, L, V, E} = PropertyGraph{T, SimpleGraph{T}, L, V, E}
 
 
-vlabels(pg::PropertyGraph) = domain(pg.vmap)
-
-vcode(pg::PropertyGraph, vlabel) = pg.vmap[vlabel]
-LightGraphs.Edge(pg::PropertyGraph, u, v) = Edge(vcode(pg, u), vcode(pg, v))
+(pg::PropertyGraph)(label) = pg.vmap[label]
+(pg::SimplePropertyGraph)(src_label, dst_label) = Edge(pg(src_label), pg(dst_label))
 
 
-Base.in(vlabel, pg::PropertyGraph) = (vlabel in vlabels(pg))
+label(pg::PropertyGraph, code) = pg.vmap(code)
+
+
+labels(pg::PropertyGraph) = domain(pg.vmap)
+Base.in(vlabel, pg::PropertyGraph) = (vlabel in labels(pg))
 
 
 LightGraphs.edges(pg::PropertyGraph) = edges(pg.g)
 LightGraphs.vertices(pg::PropertyGraph) = vertices(pg.g)
 LightGraphs.nv(pg::PropertyGraph) = nv(pg.g)
 LightGraphs.ne(pg::PropertyGraph) = ne(pg.g)
-LightGraphs.inneighbors(pg::PropertyGraph, vcode) = inneighbors(pg.g, vcode)
-LightGraphs.outneighbors(pg::PropertyGraph, vcode) = outneighbors(pg.g, vcode)
+LightGraphs.inneighbors(pg::PropertyGraph, code) = inneighbors(pg.g, code)
+LightGraphs.outneighbors(pg::PropertyGraph, code) = outneighbors(pg.g, code)
 
 
 function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,V,E}
@@ -61,22 +77,26 @@ function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,
 end
 
 
-function LightGraphs.add_vertex!(pg::SimplePropertyGraph, vlabel)
-    if vlabel in pg
+function LightGraphs.add_vertex!(pg::SimplePropertyGraph, label)
+    if label in pg
         return false
     end
 
     added = add_vertex!(pg.g)
     if added
-        pg.vmap[vlabel] = nv(pg)
+        pg.vmap[label] = nv(pg)
     end
 
     added
 end
 
 
-LightGraphs.add_edge!(pg::SimplePropertyGraph, u, v) = add_edge!(pg.g, Edge(pg, u, v))
+LightGraphs.add_edge!(pg::SimplePropertyGraph, e::Edge) = add_edge!(pg.g, e)
+
+function LightGraphs.add_edge!(pg::SimplePropertyGraph, src_label, dst_label)
+    add_edge!(pg, pg(src_label, dst_label))
+end
 
 
-Base.setindex!(pg::PropertyGraph, val, vlabel) = ( pg.vprops[vlabel] = val )
-Base.getindex(pg::PropertyGraph, vlabel) = pg.vprops[vlabel]
+Base.setindex!(pg::PropertyGraph, val, label) = ( pg.vprops[label] = val )
+Base.getindex(pg::PropertyGraph, label) = pg.vprops[label]
