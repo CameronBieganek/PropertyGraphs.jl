@@ -78,7 +78,7 @@ label(pg::PropertyGraph, code) = pg.vmap(code)
 
 
 labels(pg::PropertyGraph) = domain(pg.vmap)
-Base.in(vlabel, pg::PropertyGraph) = (vlabel in labels(pg))
+Base.in(label, pg::PropertyGraph) = (label in labels(pg))
 
 
 LightGraphs.edges(pg::PropertyGraph) = edges(pg.g)
@@ -111,7 +111,11 @@ end
 LightGraphs.add_edge!(pg::SimpleAlias, e::Edge) = add_edge!(pg.g, e)
 
 function LightGraphs.add_edge!(pg::SimpleAlias, src_label, dst_label)
-    add_edge!(pg, pg(src_label, dst_label))
+    if  src_label in pg  &&  dst_label in pg
+        add_edge!(pg, pg(src_label, dst_label))
+    else
+        return false
+    end
 end
 
 
