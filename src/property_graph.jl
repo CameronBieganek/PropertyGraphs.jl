@@ -81,12 +81,15 @@ labels(pg::PropertyGraph) = domain(pg.vmap)
 Base.in(label, pg::PropertyGraph) = (label in labels(pg))
 
 
+Base.eltype(::PropertyGraph{T}) where {T} = T
 LightGraphs.edges(pg::PropertyGraph) = edges(pg.g)
 LightGraphs.vertices(pg::PropertyGraph) = vertices(pg.g)
 LightGraphs.nv(pg::PropertyGraph) = nv(pg.g)
 LightGraphs.ne(pg::PropertyGraph) = ne(pg.g)
 LightGraphs.inneighbors(pg::PropertyGraph, code) = inneighbors(pg.g, code)
 LightGraphs.outneighbors(pg::PropertyGraph, code) = outneighbors(pg.g, code)
+LightGraphs.has_vertex(pg::PropertyGraph, v) = has_vertex(pg.g, v)
+LightGraphs.has_edge(pg::PropertyGraph, u, v) = has_edge(pg.g, u, v)
 
 
 function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,V,E}
@@ -133,9 +136,12 @@ function LightGraphs.rem_vertex!(pg::SimpleAlias, _label)
         last_label = label(pg, last_code)
 
         delete!(pg.vmap, _label)
-        # Bijections.jl requires deleting a key before changing its value.
-        delete!(pg.vmap, last_label)
-        pg.vmap[last_label] = code
+
+        if _label != last_label
+            # Bijections.jl requires deleting a key before changing its value.
+            delete!(pg.vmap, last_label)
+            pg.vmap[last_label] = code
+        end
     end
 
     removed
