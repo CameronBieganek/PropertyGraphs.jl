@@ -86,10 +86,25 @@ LightGraphs.edges(pg::PropertyGraph) = edges(pg.g)
 LightGraphs.vertices(pg::PropertyGraph) = vertices(pg.g)
 LightGraphs.nv(pg::PropertyGraph) = nv(pg.g)
 LightGraphs.ne(pg::PropertyGraph) = ne(pg.g)
-LightGraphs.inneighbors(pg::PropertyGraph, code) = inneighbors(pg.g, code)
-LightGraphs.outneighbors(pg::PropertyGraph, code) = outneighbors(pg.g, code)
-LightGraphs.has_vertex(pg::PropertyGraph, v) = has_vertex(pg.g, v)
-LightGraphs.has_edge(pg::PropertyGraph, u, v) = has_edge(pg.g, u, v)
+
+LightGraphs.inneighbors(pg::PropertyGraph, code::Integer) = inneighbors(pg.g, code)
+LightGraphs.inneighbors(pg::PropertyGraph{T, G, L}, label::L) where {T, G, L} = inneighbors(pg.g, pg(label))
+
+LightGraphs.outneighbors(pg::PropertyGraph, code::Integer) = outneighbors(pg.g, code)
+LightGraphs.outneighbors(pg::PropertyGraph{T, G, L}, label::L) where {T, G, L} = outneighbors(pg.g, pg(label))
+
+LightGraphs.has_vertex(pg::PropertyGraph, code::Integer) = has_vertex(pg.g, code)
+LightGraphs.has_vertex(pg::PropertyGraph{T, G, L}, label::L) where {T, G, L} = (label in pg)
+
+LightGraphs.has_edge(pg::PropertyGraph, u::Integer, v::Integer) = has_edge(pg.g, u, v)
+
+function LightGraphs.has_edge(pg::PropertyGraph{T, G, L}, u::L, v::L) where {T, G, L}
+    if u ∉ pg || v ∉ pg
+        false
+    else
+        has_edge(pg.g, pg(u), pg(v))
+    end
+end
 
 
 function LightGraphs.is_directed(::Type{PropertyGraph{T,G,L,V,E}}) where {T,G,L,V,E}
