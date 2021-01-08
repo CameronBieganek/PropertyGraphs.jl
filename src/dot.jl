@@ -5,7 +5,7 @@ function write_dot(path::AbstractString, pg::PropertyGraph)
         println(io, "digraph G {")
         println(io, "rankdir=LR;")
 
-        foreach(sort(collect(pg.vmap))) do (label, code)
+        foreach(collect(pg.vmap)) do (label, code)
             println(io, "$code [label=$label];")
         end
 
