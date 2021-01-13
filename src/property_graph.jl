@@ -164,3 +164,13 @@ end
 
 
 Base.reverse!(pg::SimpleAlias) = reverse!(pg.g)
+
+
+function Base.copy(pg::PropertyGraph)
+    PropertyGraph(
+        copy(pg.g),
+        Bijection(Dict(pg.vmap)),
+        copy(pg.vprops),
+        copy(pg.eprops)
+    )
+end
