@@ -163,6 +163,15 @@ function LightGraphs.rem_vertex!(pg::SimpleAlias, _label)
 end
 
 
+function LightGraphs.rem_edge!(pg::SimpleAlias, src_label, dst_label)
+    removed = rem_edge!(pg.g, pg(src_label, dst_label))
+    if removed
+        # Delete edge properties.
+    end
+    removed
+end
+
+
 Base.reverse!(pg::SimpleAlias) = reverse!(pg.g)
 
 
